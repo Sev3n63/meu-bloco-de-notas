@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DevNotes — Áreas e anotações para devs</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0d1117;
+      --bg-panel: #161b22;
+      --bg-elevated: #1c2128;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #58a6ff;
+      --accent-soft: rgba(88, 166, 255, 0.12);
+      --success: #3fb950;
+      --warning: #d29922;
+      --danger: #f85149;
+      --code-bg: #0d1117;
+      --radius: 10px;
+      --radius-sm: 6px;
+      --font: "Plus Jakarta Sans", system-ui, sans-serif;
+      --mono: "JetBrains Mono", ui-monospace, monospace;
+      --sidebar-w: 280px;
+      --shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html, body { height: 100%; margin: 0; }
+
+    body {
+      font-family: var(--font);
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--text);
+      background: var(--bg);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button, input, textarea, select {
+      font: inherit;
+      color: inherit;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: var(--sidebar-w) 1fr;
+      min-height: 100vh;
+    }
+
+    @media (max-width: 880px) {
+      .app {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+      }
+      .sidebar { border-right: none; border-bottom: 1px solid var(--border); max-height: 42vh; }
+    }
+
+    /* Sidebar */
+    .sidebar {
+      background: var(--bg-panel);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .brand {
+      padding: 1.1rem 1rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: flex-start;
+      gap: 0.65rem;
+    }
+
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radius-sm);
+      background: linear-gradient(135deg, var(--accent), #a371f7);
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .brand p {
+      margin: 0.15rem 0 0;
+      font-size: 0.75rem;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    .sidebar-tools {
+      padding: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .search-wrap { position: relative; }
+
+    .search-wrap svg {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      translate: 0 -50%;
+      opacity: 0.45;
+      pointer-events: none;
+    }
+
+    .search {
+      width: 100%;
+      padding: 0.5rem 0.65rem 0.5rem 2rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      outline: none;
+    }
+
+    .search:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      padding: 0.45rem 0.75rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--bg-elevated);
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.8125rem;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .btn:hover { background: var(--bg-panel); border-color: var(--muted); }
+
+    .btn-primary {
+      background: var(--accent);
+      border-color: transparent;
+      color: #0d1117;
+    }
+
+    .btn-primary:hover { filter: brightness(1.08); border-color: transparent; }
+
+    .btn-ghost {
+      background: transparent;
+      border-color: transparent;
+      color: var(--muted);
+      font-weight: 500;
+      padding: 0.35rem 0.5rem;
+    }
+
+    .btn-ghost:hover { color: var(--text); background: var(--accent-soft); }
+
+    .btn-danger:hover { background: rgba(248, 81, 73, 0.12); border-color: var(--danger); color: var(--danger); }
+
+    .areas-head {
+      padding: 0.35rem 0.85rem 0.25rem;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+    }
+
+    .areas-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 0.5rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .area-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.55rem 0.65rem;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      border: 1px solid transparent;
+      text-align: left;
+      background: transparent;
+      width: 100%;
+    }
+
+    .area-item:hover { background: var(--bg-elevated); }
+
+    .area-item.active {
+      background: var(--accent-soft);
+      border-color: rgba(88, 166, 255, 0.35);
+    }
+
+    .area-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .area-name {
+      flex: 1;
+      min-width: 0;
+      font-weight: 600;
+      font-size: 0.875rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .area-count {
+      font-size: 0.7rem;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .sidebar-footer {
+      padding: 0.65rem 0.85rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.7rem;
+      color: var(--muted);
+    }
+
+    /* Main */
+    .main {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      min-width: 0;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.85rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    .toolbar-title {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .toolbar-title h2 {
+      margin: 0;
+      font-size: 1.125rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .toolbar-title span {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .notes-grid {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem 1.25rem 2rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1rem;
+      align-content: start;
+    }
+
+    .empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 3rem 1.5rem;
+      color: var(--muted);
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-panel);
+    }
+
+    .empty-state strong { color: var(--text); display: block; margin-bottom: 0.35rem; }
+
+    /* Card */
+    .card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      display: flex;
+      flex-direction: column;
+      min-height: 200px;
+      box-shadow: var(--shadow);
+      transition: border-color 0.15s;
+    }
+
+    .card:hover { border-color: #484f58; }
+
+    .card-head {
+      padding: 0.65rem 0.75rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+
+    .card-type {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 0.2rem 0.45rem;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    .type-code { color: #79c0ff; border-color: rgba(121, 192, 255, 0.35); background: rgba(121, 192, 255, 0.08); }
+    .type-concept { color: #d2a8ff; border-color: rgba(210, 168, 255, 0.35); background: rgba(210, 168, 255, 0.08); }
+    .type-checklist { color: #56d364; border-color: rgba(86, 211, 100, 0.35); background: rgba(86, 211, 100, 0.08); }
+    .type-link { color: #ffa657; border-color: rgba(255, 166, 87, 0.35); background: rgba(255, 166, 87, 0.08); }
+
+    .card-title-input {
+      flex: 1;
+      min-width: 0;
+      border: none;
+      background: transparent;
+      font-weight: 700;
+      font-size: 0.9375rem;
+      padding: 0.15rem 0;
+      outline: none;
+    }
+
+    .card-title-input::placeholder { color: var(--muted); font-weight: 500; }
+
+    .card-actions { display: flex; gap: 2px; flex-shrink: 0; }
+
+    .card-body { flex: 1; padding: 0.65rem 0.75rem; display: flex; flex-direction: column; gap: 0.5rem; min-height: 0; }
+
+    .card-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      align-items: center;
+    }
+
+    .tag-input {
+      flex: 1;
+      min-width: 120px;
+      font-size: 0.75rem;
+      padding: 0.25rem 0.4rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      outline: none;
+    }
+
+    .type-select {
+      font-size: 0.75rem;
+      padding: 0.25rem 0.35rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      cursor: pointer;
+      max-width: 140px;
+    }
+
+    .content-area {
+      flex: 1;
+      min-height: 120px;
+      width: 100%;
+      resize: vertical;
+      padding: 0.55rem 0.65rem;
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-family: var(--mono);
+      font-size: 0.8125rem;
+      line-height: 1.55;
+      outline: none;
+    }
+
+    .content-area:focus { border-color: var(--accent); }
+
+    .card-foot {
+      padding: 0.5rem 0.75rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.7rem;
+      color: var(--muted);
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(1, 4, 9, 0.65);
+      display: grid;
+      place-items: center;
+      z-index: 100;
+      padding: 1rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+
+    .modal-backdrop.open { opacity: 1; pointer-events: auto; }
+
+    .modal {
+      width: min(400px, 100%);
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.1rem;
+      box-shadow: var(--shadow);
+    }
+
+    .modal h3 { margin: 0 0 0.75rem; font-size: 1rem; }
+
+    .modal input {
+      width: 100%;
+      padding: 0.55rem 0.65rem;
+      margin-bottom: 0.75rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      outline: none;
+    }
+
+    .modal input:focus { border-color: var(--accent); }
+
+    .modal-actions { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 0.25rem; }
+
+    .toast {
+      position: fixed;
+      bottom: 1.25rem;
+      right: 1.25rem;
+      padding: 0.55rem 0.85rem;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 0.8125rem;
+      box-shadow: var(--shadow);
+      z-index: 120;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: 0.2s;
+      pointer-events: none;
+    }
+
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    .sr-only {
+      position: absolute;
+      width: 1px; height: 1px;
+      padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0,0,0,0);
+      white-space: nowrap; border: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" aria-label="Áreas de anotação">
+      <div class="brand">
+        <div class="brand-icon" aria-hidden="true">DN</div>
+        <div>
+          <h1>DevNotes</h1>
+          <p>Códigos, conceitos e lembretes em um só lugar.</p>
+        </div>
+      </div>
+      <div class="sidebar-tools">
+        <div class="search-wrap">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" />
+          </svg>
+          <label class="sr-only" for="q">Buscar nas anotações</label>
+          <input class="search" id="q" type="search" placeholder="Buscar título, tag ou conteúdo…" autocomplete="off" />
+        </div>
+        <button type="button" class="btn btn-primary" id="btnNewArea" style="width:100%">
+          <span aria-hidden="true">+</span> Nova área
+        </button>
+      </div>
+      <div class="areas-head">Suas áreas</div>
+      <div class="areas-list" id="areasList" role="list"></div>
+      <div class="sidebar-footer">
+        Dados salvos apenas neste navegador (localStorage). Exporte com segurança se mudar de máquina.
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="toolbar">
+        <div class="toolbar-title">
+          <h2 id="currentAreaTitle">—</h2>
+          <span id="currentAreaHint">Selecione ou crie uma área à esquerda.</span>
+        </div>
+        <button type="button" class="btn" id="btnRenameArea">Renomear área</button>
+        <button type="button" class="btn btn-danger" id="btnDeleteArea">Excluir área</button>
+        <button type="button" class="btn btn-primary" id="btnNewNote">Nova anotação</button>
+        <button type="button" class="btn" id="btnExport">Exportar JSON</button>
+        <label class="btn" style="cursor:pointer;margin:0">
+          Importar JSON
+          <input type="file" id="importFile" accept="application/json,.json" class="sr-only" />
+        </label>
+      </header>
+      <div class="notes-grid" id="notesGrid"></div>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal">
+      <h3 id="modalTitle">Nova área</h3>
+      <label class="sr-only" for="modalInput">Nome</label>
+      <input type="text" id="modalInput" placeholder="Ex.: React, APIs, Snippets SQL…" maxlength="80" />
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" id="modalCancel">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="modalOk">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+    (function () {
+      const STORAGE_KEY = "devnotes.v1";
+      const COLORS = ["#58a6ff", "#a371f7", "#3fb950", "#d29922", "#f778ba", "#79c0ff"];
+
+      /** @typedef {{ id: string, title: string, type: string, tags: string, body: string, updatedAt: number }} Note */
+      /** @typedef {{ id: string, name: string, color: string, notes: Note[] }} Area */
+
+      /** @returns {Area[]} */
+      function loadState() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return defaultState();
+          const data = JSON.parse(raw);
+          if (!data || !Array.isArray(data.areas)) return defaultState();
+          return data.areas.map(normalizeArea);
+        } catch {
+          return defaultState();
+        }
+      }
+
+      function defaultState() {
+        const id = uid();
+        return [{
+          id,
+          name: "Geral",
+          color: COLORS[0],
+          notes: [{
+            id: uid(),
+            title: "Bem-vindo",
+            type: "concept",
+            tags: "intro",
+            body: "Use **áreas** para separar temas (ex.: front-end, banco de dados, comandos Git).\n\nCada cartão pode ser:\n• Código — trechos para colar depois\n• Conceito — explicações e dicas\n• Checklist — tarefas ou passos\n• Link / ref — URLs e documentação\n\nTudo salva automaticamente neste navegador.",
+            updatedAt: Date.now()
+          }]
+        }];
+      }
+
+      /** @param {any} a */
+      function normalizeArea(a) {
+        return {
+          id: String(a.id || uid()),
+          name: String(a.name || "Sem nome").slice(0, 80),
+          color: COLORS.includes(a.color) ? a.color : COLORS[Math.floor(Math.random() * COLORS.length)],
+          notes: Array.isArray(a.notes) ? a.notes.map(normalizeNote) : []
+        };
+      }
+
+      function normalizeNote(n) {
+        return {
+          id: String(n.id || uid()),
+          title: String(n.title || "").slice(0, 200),
+          type: ["code", "concept", "checklist", "link"].includes(n.type) ? n.type : "concept",
+          tags: String(n.tags || "").slice(0, 200),
+          body: String(n.body || ""),
+          updatedAt: Number(n.updatedAt) || Date.now()
+        };
+      }
+
+      function uid() {
+        return Math.random().toString(36).slice(2, 11) + Date.now().toString(36);
+      }
+
+      /** @param {Area[]} areas */
+      function saveState(areas) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ areas }));
+      }
+
+      const els = {
+        areasList: document.getElementById("areasList"),
+        notesGrid: document.getElementById("notesGrid"),
+        q: document.getElementById("q"),
+        currentAreaTitle: document.getElementById("currentAreaTitle"),
+        currentAreaHint: document.getElementById("currentAreaHint"),
+        btnNewArea: document.getElementById("btnNewArea"),
+        btnRenameArea: document.getElementById("btnRenameArea"),
+        btnDeleteArea: document.getElementById("btnDeleteArea"),
+        btnNewNote: document.getElementById("btnNewNote"),
+        btnExport: document.getElementById("btnExport"),
+        importFile: document.getElementById("importFile"),
+        modalBackdrop: document.getElementById("modalBackdrop"),
+        modalTitle: document.getElementById("modalTitle"),
+        modalInput: document.getElementById("modalInput"),
+        modalCancel: document.getElementById("modalCancel"),
+        modalOk: document.getElementById("modalOk"),
+        toast: document.getElementById("toast")
+      };
+
+      let areas = loadState();
+      let activeAreaId = areas[0]?.id || null;
+      let modalMode = /** @type {"newArea"|"renameArea"|null} */ (null);
+      let toastTimer = null;
+
+      function toast(msg) {
+        els.toast.textContent = msg;
+        els.toast.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => els.toast.classList.remove("show"), 2200);
+      }
+
+      function getActiveArea() {
+        return areas.find((a) => a.id === activeAreaId) || null;
+      }
+
+      function openModal(mode) {
+        modalMode = mode;
+        els.modalBackdrop.classList.add("open");
+        if (mode === "newArea") {
+          els.modalTitle.textContent = "Nova área";
+          els.modalInput.value = "";
+          els.modalInput.placeholder = "Nome da área (ex.: Node.js, CSS, Entrevistas)";
+        } else if (mode === "renameArea") {
+          els.modalTitle.textContent = "Renomear área";
+          const a = getActiveArea();
+          els.modalInput.value = a ? a.name : "";
+          els.modalInput.placeholder = "Novo nome";
+        }
+        els.modalInput.focus();
+      }
+
+      function closeModal() {
+        modalMode = null;
+        els.modalBackdrop.classList.remove("open");
+      }
+
+      function commitModal() {
+        const name = els.modalInput.value.trim();
+        if (!name) {
+          toast("Digite um nome.");
+          return;
+        }
+        if (modalMode === "newArea") {
+          const color = COLORS[areas.length % COLORS.length];
+          const na = { id: uid(), name, color, notes: [] };
+          areas.push(na);
+          activeAreaId = na.id;
+          saveState(areas);
+          closeModal();
+          render();
+          toast("Área criada.");
+        } else if (modalMode === "renameArea") {
+          const a = getActiveArea();
+          if (!a) return closeModal();
+          a.name = name.slice(0, 80);
+          saveState(areas);
+          closeModal();
+          render();
+          toast("Área renomeada.");
+        }
+      }
+
+      function typeLabel(t) {
+        return { code: "Código", concept: "Conceito", checklist: "Checklist", link: "Link / ref" }[t] || t;
+      }
+
+      function typeClass(t) {
+        return { code: "type-code", concept: "type-concept", checklist: "type-checklist", link: "type-link" }[t] || "type-concept";
+      }
+
+      function matchesQuery(note, query) {
+        if (!query) return true;
+        const q = query.toLowerCase();
+        return (
+          note.title.toLowerCase().includes(q) ||
+          note.tags.toLowerCase().includes(q) ||
+          note.body.toLowerCase().includes(q)
+        );
+      }
+
+      function renderSidebar() {
+        els.areasList.innerHTML = "";
+        const q = els.q.value.trim().toLowerCase();
+        areas.forEach((area) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "area-item" + (area.id === activeAreaId ? " active" : "");
+          btn.setAttribute("role", "listitem");
+          const visibleNotes = q
+            ? area.notes.filter((n) => matchesQuery(n, q))
+            : area.notes;
+          const count = q ? visibleNotes.length : area.notes.length;
+          btn.innerHTML =
+            `<span class="area-dot" style="background:${area.color}"></span>` +
+            `<span class="area-name">${escapeHtml(area.name)}</span>` +
+            `<span class="area-count">${count}</span>`;
+          btn.addEventListener("click", () => {
+            activeAreaId = area.id;
+            render();
+          });
+          els.areasList.appendChild(btn);
+        });
+      }
+
+      function escapeHtml(s) {
+        return s
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function renderMain() {
+        const area = getActiveArea();
+        if (!area) {
+          els.currentAreaTitle.textContent = "Nenhuma área";
+          els.currentAreaHint.textContent = "Crie uma área para começar.";
+          els.notesGrid.innerHTML =
+            `<div class="empty-state"><strong>Nenhuma área ainda</strong>Clique em «Nova área» na barra lateral.</div>`;
+          return;
+        }
+        els.currentAreaTitle.textContent = area.name;
+        const q = els.q.value.trim();
+        els.currentAreaHint.textContent = q
+          ? `Filtrando por «${q}» nesta área.`
+          : `${area.notes.length} anotação(ões) nesta área.`;
+
+        const filtered = area.notes.filter((n) => matchesQuery(n, q));
+        els.notesGrid.innerHTML = "";
+
+        if (filtered.length === 0) {
+          const empty = document.createElement("div");
+          empty.className = "empty-state";
+          if (area.notes.length === 0) {
+            empty.innerHTML = "<strong>Área vazia</strong>Use «Nova anotação» para guardar código, links ou lembretes.";
+          } else {
+            empty.innerHTML = "<strong>Nada encontrado</strong>Tente outro termo na busca ou limpe o campo.";
+          }
+          els.notesGrid.appendChild(empty);
+          return;
+        }
+
+        filtered
+          .slice()
+          .sort((a, b) => b.updatedAt - a.updatedAt)
+          .forEach((note) => {
+            els.notesGrid.appendChild(renderCard(area, note));
+          });
+      }
+
+      function renderCard(area, note) {
+        const card = document.createElement("article");
+        card.className = "card";
+        card.dataset.noteId = note.id;
+
+        const head = document.createElement("div");
+        head.className = "card-head";
+
+        const badge = document.createElement("span");
+        badge.className = "card-type " + typeClass(note.type);
+        badge.textContent = typeLabel(note.type);
+
+        const titleIn = document.createElement("input");
+        titleIn.className = "card-title-input";
+        titleIn.type = "text";
+        titleIn.placeholder = "Título da anotação";
+        titleIn.value = note.title;
+        titleIn.addEventListener("input", () => {
+          note.title = titleIn.value;
+          note.updatedAt = Date.now();
+          saveState(areas);
+          renderSidebar();
+        });
+
+        const actions = document.createElement("div");
+        actions.className = "card-actions";
+        const delBtn = document.createElement("button");
+        delBtn.type = "button";
+        delBtn.className = "btn btn-ghost btn-danger";
+        delBtn.setAttribute("aria-label", "Excluir anotação");
+        delBtn.textContent = "✕";
+        delBtn.addEventListener("click", () => {
+          if (!confirm("Excluir esta anotação?")) return;
+          area.notes = area.notes.filter((n) => n.id !== note.id);
+          saveState(areas);
+          render();
+          toast("Anotação removida.");
+        });
+        actions.appendChild(delBtn);
+
+        head.appendChild(badge);
+        head.appendChild(titleIn);
+        head.appendChild(actions);
+
+        const body = document.createElement("div");
+        body.className = "card-body";
+
+        const meta = document.createElement("div");
+        meta.className = "card-meta";
+
+        const typeSel = document.createElement("select");
+        typeSel.className = "type-select";
+        typeSel.setAttribute("aria-label", "Tipo da anotação");
+        ["code", "concept", "checklist", "link"].forEach((t) => {
+          const o = document.createElement("option");
+          o.value = t;
+          o.textContent = typeLabel(t);
+          typeSel.appendChild(o);
+        });
+        typeSel.value = note.type;
+        typeSel.addEventListener("change", () => {
+          note.type = typeSel.value;
+          badge.className = "card-type " + typeClass(note.type);
+          badge.textContent = typeLabel(note.type);
+          note.updatedAt = Date.now();
+          saveState(areas);
+        });
+
+        const tagIn = document.createElement("input");
+        tagIn.className = "tag-input";
+        tagIn.type = "text";
+        tagIn.placeholder = "Tags (ex.: react, hooks)";
+        tagIn.value = note.tags;
+        tagIn.addEventListener("input", () => {
+          note.tags = tagIn.value;
+          note.updatedAt = Date.now();
+          saveState(areas);
+          renderSidebar();
+        });
+
+        meta.appendChild(typeSel);
+        meta.appendChild(tagIn);
+
+        const ta = document.createElement("textarea");
+        ta.className = "content-area";
+        ta.placeholder =
+          note.type === "code"
+            ? "Cole ou escreva o trecho de código…"
+            : note.type === "checklist"
+              ? "Um item por linha. Use [ ] e [x] para marcar.\n[ ] Estudar closures\n[x] Revisar promises"
+              : note.type === "link"
+                ? "URLs e referências (uma por linha)…"
+                : "Explicações, comandos, ideias…";
+        ta.value = note.body;
+        ta.addEventListener("input", () => {
+          note.body = ta.value;
+          note.updatedAt = Date.now();
+          saveState(areas);
+        });
+
+        body.appendChild(meta);
+        body.appendChild(ta);
+
+        const foot = document.createElement("div");
+        foot.className = "card-foot";
+        const when = new Date(note.updatedAt);
+        foot.innerHTML = `<span>Atualizado ${when.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}</span>`;
+
+        card.appendChild(head);
+        card.appendChild(body);
+        card.appendChild(foot);
+        return card;
+      }
+
+      function addNote() {
+        const area = getActiveArea();
+        if (!area) {
+          toast("Crie uma área primeiro.");
+          return;
+        }
+        const n = {
+          id: uid(),
+          title: "",
+          type: "code",
+          tags: "",
+          body: "",
+          updatedAt: Date.now()
+        };
+        area.notes.push(n);
+        saveState(areas);
+        render();
+        toast("Nova anotação.");
+      }
+
+      function deleteArea() {
+        const area = getActiveArea();
+        if (!area) return;
+        if (areas.length <= 1) {
+          toast("Mantenha pelo menos uma área.");
+          return;
+        }
+        if (!confirm(`Excluir a área «${area.name}» e todas as ${area.notes.length} anotações?`)) return;
+        areas = areas.filter((a) => a.id !== area.id);
+        activeAreaId = areas[0].id;
+        saveState(areas);
+        render();
+        toast("Área excluída.");
+      }
+
+      function exportJson() {
+        const blob = new Blob([JSON.stringify({ areas }, null, 2)], { type: "application/json" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "devnotes-export.json";
+        a.click();
+        URL.revokeObjectURL(a.href);
+        toast("Exportação pronta.");
+      }
+
+      function importJson(file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const data = JSON.parse(String(reader.result));
+            if (!data || !Array.isArray(data.areas)) throw new Error("Formato inválido");
+            areas = data.areas.map(normalizeArea);
+            activeAreaId = areas[0]?.id || null;
+            saveState(areas);
+            render();
+            toast("Importação concluída.");
+          } catch {
+            toast("Arquivo JSON inválido.");
+          }
+        };
+        reader.readAsText(file);
+      }
+
+      function render() {
+        renderSidebar();
+        renderMain();
+      }
+
+      els.btnNewArea.addEventListener("click", () => openModal("newArea"));
+      els.btnRenameArea.addEventListener("click", () => {
+        if (!getActiveArea()) return toast("Nenhuma área selecionada.");
+        openModal("renameArea");
+      });
+      els.btnDeleteArea.addEventListener("click", deleteArea);
+      els.btnNewNote.addEventListener("click", addNote);
+      els.btnExport.addEventListener("click", exportJson);
+      els.importFile.addEventListener("change", (e) => {
+        const f = e.target.files && e.target.files[0];
+        e.target.value = "";
+        if (f) importJson(f);
+      });
+      els.q.addEventListener("input", render);
+
+      els.modalCancel.addEventListener("click", closeModal);
+      els.modalOk.addEventListener("click", commitModal);
+      els.modalInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") commitModal();
+        if (e.key === "Escape") closeModal();
+      });
+      els.modalBackdrop.addEventListener("click", (e) => {
+        if (e.target === els.modalBackdrop) closeModal();
+      });
+
+      render();
+    })();
+  </script>
+</body>
+</html>
